@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import com.ctre.phoenix.music.Orchestra;
 
 import static frc.robot.Constants.DriveContstants.*;
 
@@ -61,10 +62,21 @@ public class DrivetrainSubsystem extends SubsystemBase {
   private final SwerveModule m_frontRightModule;
   */
   private final SwerveModule m_backLeftModule;
-  //private final SwerveModule m_backRightModule;
+  private final SwerveModule m_backRightModule;
   
 
   private ChassisSpeeds m_chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
+
+  private SwerveModuleState[] states = {
+        new SwerveModuleState(), 
+        new SwerveModuleState(), 
+        new SwerveModuleState(), 
+        new SwerveModuleState()
+  };
+
+  private SwerveModuleState[] lStates = states;
+
+  private boolean freezeDrive = false;
 
   public DrivetrainSubsystem() {
     ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
@@ -109,8 +121,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
             FRONT_RIGHT_MODULE_STEER_OFFSET
     );
 */
-        
-    /*
 
     m_backRightModule = Mk4SwerveModuleHelper.createFalcon500(
             tab.getLayout("Back Right Module", BuiltInLayouts.kList)
@@ -122,7 +132,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
             BACK_RIGHT_MODULE_STEER_ENCODER,
             BACK_RIGHT_MODULE_STEER_OFFSET
     );
-    */
   }
 
   /**
@@ -138,22 +147,45 @@ public class DrivetrainSubsystem extends SubsystemBase {
   }
 
   public void drive(ChassisSpeeds chassisSpeeds) {
-    m_chassisSpeeds = chassisSpeeds;
+        if(Math.abs(chassisSpeeds.omegaRadiansPerSecond) +
+        Math.abs(chassisSpeeds.vxMetersPerSecond) +
+        Math.abs(chassisSpeeds.vyMetersPerSecond) < .1){
+              freezeDrive = true;
+              states[0].speedMetersPerSecond = 0;
+              states[1].speedMetersPerSecond = 0;
+              states[2].speedMetersPerSecond = 0;
+              states[3].speedMetersPerSecond = 0;
+              states[0].angle = lStates[0].angle;
+              states[1].angle = lStates[1].angle;
+              states[2].angle = lStates[2].angle;
+              states[3].angle = lStates[3].angle;
+        }else{
+                freezeDrive = false;
+        }
+        m_chassisSpeeds = chassisSpeeds;
   }
 
   @Override
   public void periodic() {
 
-        System.out.println(m_navx.getAngle());
-    SwerveModuleState[] states = m_kinematics.toSwerveModuleStates(m_chassisSpeeds);
+        lStates = states;
+
+        
+
+        System.out.println(m_backRightModule.getSteerAngle());
+
+    
+    if(freezeDrive == false){
+        states = m_kinematics.toSwerveModuleStates(m_chassisSpeeds);
+    }
     SwerveDriveKinematics.normalizeWheelSpeeds(states, MAX_VELOCITY_METERS_PER_SECOND);
 
     /*m_frontLeftModule.set(states[0].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[0].angle.getRadians());
     m_frontRightModule.set(states[1].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[1].angle.getRadians());
         */
-    //m_backLeftModule.set(states[2].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[2].angle.getRadians());
-    m_backLeftModule.set(0/ MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[2].angle.getRadians());
-    //m_backRightModule.set(states[3].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[3].angle.getRadians());
+    m_backLeftModule.set(states[2].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[2].angle.getRadians());
+
+    m_backRightModule.set(states[3].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[3].angle.getRadians());
 
   }
 }
