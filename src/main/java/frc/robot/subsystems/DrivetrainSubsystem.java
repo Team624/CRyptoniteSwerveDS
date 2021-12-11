@@ -149,7 +149,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
 
-        System.out.println(m_navx.getAngle());
+        System.out.println("Standard: " + m_navx.getAngle());
+        System.out.println("Fused: " + m_navx.getFusedHeading());
     SwerveModuleState[] states = m_kinematics.toSwerveModuleStates(m_chassisSpeeds);
     SwerveDriveKinematics.normalizeWheelSpeeds(states, MAX_VELOCITY_METERS_PER_SECOND);
 
