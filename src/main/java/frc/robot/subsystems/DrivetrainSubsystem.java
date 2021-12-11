@@ -134,6 +134,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
   }
 
   public Rotation2d getGyroscopeRotation() {
+
+        if(m_navx.isMagnetometerCalibrated()){
+                return Rotation2d.fromDegrees(m_navx.getFusedHeading());
+        }
+
         return Rotation2d.fromDegrees(360.0 - m_navx.getYaw());
   }
 
