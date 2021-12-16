@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Button;
 import frc.robot.commands.DefaultDriveCommand;
+import frc.robot.commands.PlayMusic;
 import frc.robot.subsystems.DrivetrainSubsystem;
 
 /**
@@ -51,6 +52,8 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    // Plays music
+    new Button(m_driverController::getBButton).whenPressed(new PlayMusic(m_drivetrainSubsystem));
     // Back button zeros the gyroscope
     new Button(m_driverController::getBackButton)
             // No requirements because we don't need to interrupt anything

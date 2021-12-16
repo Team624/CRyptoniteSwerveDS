@@ -4,7 +4,9 @@
 
 package frc.robot.subsystems;
 
-import com.analog.adis16470.frc.ADIS16470_IMU;
+import frc.robot.Constants;
+import java.util.ArrayList;
+import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
 import com.swervedrivespecialties.swervelib.Mk4SwerveModuleHelper;
@@ -19,6 +21,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
 import com.ctre.phoenix.music.Orchestra;
 
 import static frc.robot.Constants.DriveContstants.*;
@@ -78,6 +81,14 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
   private boolean freezeDrive = false;
 
+  private static Orchestra orchestra;
+
+  //ONLY USE THIS FOR MUSIC!!!!! DO NOT GIVE THESE OUTPUT
+  private static TalonFX talon0 = new TalonFX(Constants.DriveContstants.BACK_RIGHT_MODULE_DRIVE_MOTOR);
+  private static TalonFX talon1 = new TalonFX(Constants.DriveContstants.BACK_LEFT_MODULE_DRIVE_MOTOR);
+  private static TalonFX talon2 = new TalonFX(Constants.DriveContstants.BACK_LEFT_MODULE_STEER_MOTOR);
+  private static TalonFX talon3 = new TalonFX(Constants.DriveContstants.BACK_RIGHT_MODULE_STEER_MOTOR);
+
   public DrivetrainSubsystem() {
     ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
 
@@ -132,6 +143,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
             BACK_RIGHT_MODULE_STEER_ENCODER,
             BACK_RIGHT_MODULE_STEER_OFFSET
     );
+
+    ArrayList<TalonFX> instruments = new ArrayList<TalonFX>();
+    instruments.add(talon0);
+    instruments.add(talon1);
+    instruments.add(talon2);
+    instruments.add(talon3);
+    orchestra = new Orchestra(instruments);
   }
 
   /**
@@ -148,20 +166,16 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
   public void drive(ChassisSpeeds chassisSpeeds) {
         if(Math.abs(chassisSpeeds.omegaRadiansPerSecond) +
-        Math.abs(chassisSpeeds.vxMetersPerSecond) +
-        Math.abs(chassisSpeeds.vyMetersPerSecond) < .1){
-              freezeDrive = true;
-              states[0].speedMetersPerSecond = 0;
-              states[1].speedMetersPerSecond = 0;
-              states[2].speedMetersPerSecond = 0;
-              states[3].speedMetersPerSecond = 0;
-              states[0].angle = lStates[0].angle;
-              states[1].angle = lStates[1].angle;
-              states[2].angle = lStates[2].angle;
-              states[3].angle = lStates[3].angle;
+                Math.abs(chassisSpeeds.vxMetersPerSecond) +
+                Math.abs(chassisSpeeds.vyMetersPerSecond) < Constants.DriveContstants.freezeThreshold){
+                for(int i = 0; i < 4; i++){
+                        states[i].speedMetersPerSecond = 0;
+                        states[i].angle = lStates[i].angle;
+                }
+              freezeDrive = true;  
         }else{
                 freezeDrive = false;
-        }
+        } 
         m_chassisSpeeds = chassisSpeeds;
   }
 
@@ -187,5 +201,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
     m_backRightModule.set(states[3].speedMetersPerSecond / MAX_VELOCITY_METERS_PER_SECOND * MAX_VOLTAGE, states[3].angle.getRadians());
 
+  }
+
+  public void play(){
+        orchestra.loadMusic("Meadows.chrp");
+        orchestra.play();
   }
 }
